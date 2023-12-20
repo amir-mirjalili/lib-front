@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useTable } from "react-table";
 import styled from "styled-components";
-import DeleteBook from "./DeleteBook";
-import EditBook from "./EditBook";
+import { Link } from "react-router-dom";
 
 const Table = styled.table`
   width: 100%;
@@ -65,6 +64,14 @@ const ConfirmDialog = styled.div`
   z-index: 1000;
 `;
 
+const DeleteButton = styled.button`
+  padding: 8px;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+`;
+
 const ViewBooks = () => {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState("");
@@ -75,10 +82,6 @@ const ViewBooks = () => {
     useState(false);
   const [bookToDelete, setBookToDelete] = useState(null);
 
-  const handleEdit = (id) => {
-    console.log(`Edit book with ID ${id}`);
-  };
-
   const handleDelete = (id) => {
     setBookToDelete(id);
     setDeleteConfirmationVisible(true);
@@ -87,7 +90,7 @@ const ViewBooks = () => {
   const handleDeleteConfirmation = () => {
     axios
       .delete(`http://localhost:3001/books/${bookToDelete}`)
-      .then((response) => {
+      .then(() => {
         console.log("Book deleted successfully");
         fetchData();
       })
@@ -124,8 +127,10 @@ const ViewBooks = () => {
         accessor: "actions",
         Cell: ({ row }) => (
           <ActionContainer>
-            <EditBook id={row.original.id} onEdit={handleEdit} />
-            <DeleteBook id={row.original.id} onDelete={handleDelete} />
+            <Link to={`/edit/${row.original.id}`}>Edit</Link>
+            <DeleteButton onClick={() => handleDelete(row.original.id)}>
+              Delete
+            </DeleteButton>{" "}
           </ActionContainer>
         ),
       },
@@ -203,6 +208,15 @@ const ViewBooks = () => {
         </PaginationButton>
       </PaginationContainer>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {isDeleteConfirmationVisible && (
+        <ConfirmDialog>
+          <p>Are you sure you want to delete this book?</p>
+          <button onClick={handleDeleteConfirmation}>Confirm</button>
+          <button onClick={() => setDeleteConfirmationVisible(false)}>
+            Cancel
+          </button>
+        </ConfirmDialog>
+      )}
     </Container>
   );
 };

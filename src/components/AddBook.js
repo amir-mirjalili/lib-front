@@ -1,33 +1,99 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import axios from "axios";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+
+const AddBookContainer = styled.div`
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+`;
+
+const AddButton = styled.button`
+  background-color: #2ecc71;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #27ae60;
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #e74c3c;
+  margin-bottom: 15px;
+`;
 
 const AddBook = ({ onAddBook }) => {
-    const [title, setTitle] = useState('');
-    const [author, setAuthor] = useState('');
-    const [genre, setGenre] = useState('');
+  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [genre, setGenre] = useState("");
+  const [error, setError] = useState("");
 
-    const handleAddBook = () => {
-        // Make API call to add book
-        axios.post('http://localhost:3001/books', { title, author, genre })
-            .then(response => {
-                // Assuming the API call is successful, update the state
-                onAddBook(response.data.data);
-                // Reset form
-                setTitle('');
-                setAuthor('');
-                setGenre('');
-            })
-            .catch(error => console.error(error));
-    };
+  const handleAddBook = () => {
+    setError("");
 
-    return (
-        <div>
-            <h2>Add Book</h2>
-            <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <input type="text" placeholder="Author" value={author} onChange={(e) => setAuthor(e.target.value)} />
-            <input type="text" placeholder="Genre" value={genre} onChange={(e) => setGenre(e.target.value)} />
-            <button onClick={handleAddBook}>Add Book</button>
-        </div>
-    );
+    // Make API call to add book
+    axios
+      .post("http://localhost:3001/books", { title, author, genre })
+      .then((response) => {
+        onAddBook(response.data.data);
+        setTitle("");
+        setAuthor("");
+        setGenre("");
+        navigate("/view");
+      })
+      .catch((error) => {
+        console.error(error);
+        setError(error.response?.data?.msg);
+      });
+  };
+
+  return (
+    <AddBookContainer>
+      <Title>Add Book</Title>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      <Input
+        type="text"
+        placeholder="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <Input
+        type="text"
+        placeholder="Author"
+        value={author}
+        onChange={(e) => setAuthor(e.target.value)}
+      />
+      <Input
+        type="text"
+        placeholder="Genre"
+        value={genre}
+        onChange={(e) => setGenre(e.target.value)}
+      />
+      <AddButton onClick={handleAddBook}>Add Book</AddButton>
+    </AddBookContainer>
+  );
 };
+
 export default AddBook;
