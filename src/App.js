@@ -9,6 +9,7 @@ import AddBook from "./components/AddBook";
 import ViewBooks from "./components/ViewBooks";
 import { GlobalStyle } from "./styles";
 import EditBook from "./components/EditBook";
+import Home from "./components/Home";
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -22,6 +23,7 @@ function App() {
     <Router>
       <GlobalStyle />
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route
           path="/add"
           element={<AddBook onAddBook={handleAddBook} setError={setError} />}

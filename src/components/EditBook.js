@@ -4,6 +4,8 @@ import axios from "axios";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 const Container = styled.div`
   max-width: 400px;
   margin: 0 auto;
@@ -33,7 +35,7 @@ const EditBook = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:3001/books/${id}`)
+      .get(`${apiUrl}/books/${id}`)
       .then((response) => {
         const { title, author, genre } = response.data.data;
         setTitle(title);
@@ -45,7 +47,7 @@ const EditBook = () => {
 
   const handleUpdateBook = () => {
     axios
-      .put(`http://localhost:3001/books/${id}`, { title, author, genre })
+      .put(`${apiUrl}/books/${id}`, { title, author, genre })
       .then((response) => {
         console.log("Book updated successfully");
         // Redirect to the view page after successful update

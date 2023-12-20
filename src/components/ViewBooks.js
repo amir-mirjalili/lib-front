@@ -3,6 +3,7 @@ import axios from "axios";
 import { useTable } from "react-table";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const Table = styled.table`
   width: 100%;
@@ -89,7 +90,7 @@ const ViewBooks = () => {
 
   const handleDeleteConfirmation = () => {
     axios
-      .delete(`http://localhost:3001/books/${bookToDelete}`)
+      .delete(`${apiUrl}/books/${bookToDelete}`)
       .then(() => {
         console.log("Book deleted successfully");
         fetchData();
@@ -106,7 +107,7 @@ const ViewBooks = () => {
 
   const fetchData = () => {
     axios
-      .get("http://localhost:3001/books", {
+      .get(`${apiUrl}/books`, {
         params: {
           page,
           pageSize,
@@ -145,7 +146,7 @@ const ViewBooks = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3001/books/search", {
+      .get(`${apiUrl}/books/search`, {
         params: {
           page,
           pageSize,

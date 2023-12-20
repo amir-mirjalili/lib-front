@@ -49,13 +49,14 @@ const AddBook = ({ onAddBook }) => {
   const [author, setAuthor] = useState("");
   const [genre, setGenre] = useState("");
   const [error, setError] = useState("");
+  const apiUrl = process.env.REACT_APP_API_URL;
 
   const handleAddBook = () => {
     setError("");
 
     // Make API call to add book
     axios
-      .post("http://localhost:3001/books", { title, author, genre })
+      .post(`${apiUrl}/books`, { title, author, genre })
       .then((response) => {
         onAddBook(response.data.data);
         setTitle("");
