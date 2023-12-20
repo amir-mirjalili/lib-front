@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useTable } from 'react-table';
-import styled from 'styled-components';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useTable } from "react-table";
+import styled from "styled-components";
 import DeleteBook from "./DeleteBook";
 import EditBook from "./EditBook";
 
@@ -53,92 +53,158 @@ const PaginationButton = styled.button`
   cursor: pointer;
 `;
 
+const ConfirmDialog = styled.div`
+  /* Styles for the confirmation dialog */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ddd;
+  z-index: 1000;
+`;
+
 const ViewBooks = () => {
-    const [books, setBooks] = useState([]);
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+  const [books, setBooks] = useState([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [error, setError] = useState(null);
+  const [isDeleteConfirmationVisible, setDeleteConfirmationVisible] =
+    useState(false);
+  const [bookToDelete, setBookToDelete] = useState(null);
 
-    const handleEdit = (id) => {
-        console.log(`Edit book with ID ${id}`);
-    };
+  const handleEdit = (id) => {
+    console.log(`Edit book with ID ${id}`);
+  };
 
-    const handleDelete = (id) => {
-        console.log(`Delete book with ID ${id}`);
-    };
-    const columns = React.useMemo(
-        () => [
-            { Header: 'ID', accessor: 'id' },
-            { Header: 'Title', accessor: 'title' },
-            { Header: 'Author', accessor: 'author' },
-            { Header: 'Genre', accessor: 'genre' },
-            {
-                Header: 'Actions',
-                accessor: 'actions',
-                Cell: ({ row }) => (
-                    <ActionContainer>
-                        <EditBook id={row.original.id} onEdit={handleEdit} />
-                        <DeleteBook id={row.original.id} onDelete={handleDelete} />
-                    </ActionContainer>
-                ),
-            },
-        ],
-        []
-    );
+  const handleDelete = (id) => {
+    setBookToDelete(id);
+    setDeleteConfirmationVisible(true);
+  };
 
-    const data = React.useMemo(() => books, [books]);
+  const handleDeleteConfirmation = () => {
+    axios
+      .delete(`http://localhost:3001/books/${bookToDelete}`)
+      .then((response) => {
+        console.log("Book deleted successfully");
+        fetchData();
+      })
+      .catch((error) => {
+        console.error("Error deleting book", error);
+        setError(error.response.data.msg);
+      })
+      .finally(() => {
+        setBookToDelete(null);
+        setDeleteConfirmationVisible(false);
+      });
+  };
 
-    const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable({ columns, data });
+  const fetchData = () => {
+    axios
+      .get("http://localhost:3001/books", {
+        params: {
+          page,
+          pageSize,
+        },
+      })
+      .then((response) => setBooks(response.data.data.data))
+      .catch((error) => console.error(error));
+  };
 
-    useEffect(() => {
-        axios.get('http://localhost:3001/books',{ params: { page, pageSize } })
-            .then(response => setBooks(response.data.data.data))
-            .catch(error => console.error(error));
-    }, [page, pageSize]);
+  const columns = React.useMemo(
+    () => [
+      { Header: "ID", accessor: "id" },
+      { Header: "Title", accessor: "title" },
+      { Header: "Author", accessor: "author" },
+      { Header: "Genre", accessor: "genre" },
+      {
+        Header: "Actions",
+        accessor: "actions",
+        Cell: ({ row }) => (
+          <ActionContainer>
+            <EditBook id={row.original.id} onEdit={handleEdit} />
+            <DeleteBook id={row.original.id} onDelete={handleDelete} />
+          </ActionContainer>
+        ),
+      },
+    ],
+    []
+  );
 
-    return (
-        <Container>
-            <h2>View Books</h2>
-            <SearchInput
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-            />
-            <Table {...getTableProps()}>
-                <thead>
-                {headerGroups.map(headerGroup => (
-                    <tr {...headerGroup.getHeaderGroupProps()}>
-                        {headerGroup.headers.map(column => (
-                            <th {...column.getHeaderProps()}>{column.render('Header')}</th>
-                        ))}
-                    </tr>
+  const data = React.useMemo(() => books, [books]);
+
+  const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
+    useTable({ columns, data });
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:3001/books/search", {
+        params: {
+          page,
+          pageSize,
+          title: search,
+          author: search,
+          genre: search,
+        },
+      })
+      .then((response) => {
+        setBooks(response.data.data.data);
+        setError(null);
+      })
+      .catch((error) => {
+        console.error(error);
+        setError(error.response.data.msg);
+      });
+  }, [page, pageSize, search]);
+
+  return (
+    <Container>
+      <h2>View Books</h2>
+      <SearchInput
+        type="text"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      <Table {...getTableProps()}>
+        <thead>
+          {headerGroups.map((headerGroup) => (
+            <tr {...headerGroup.getHeaderGroupProps()}>
+              {headerGroup.headers.map((column) => (
+                <th {...column.getHeaderProps()}>{column.render("Header")}</th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+          {rows.map((row) => {
+            prepareRow(row);
+            return (
+              <tr {...row.getRowProps()}>
+                {row.cells.map((cell) => (
+                  <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
                 ))}
-                </thead>
-                <tbody {...getTableBodyProps()}>
-                {rows.map(row => {
-                    prepareRow(row);
-                    return (
-                        <tr {...row.getRowProps()}>
-                            {row.cells.map(cell => (
-                                <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                            ))}
-                        </tr>
-                    );
-                })}
-                </tbody>
-            </Table>
-            <PaginationContainer>
-                <PaginationButton onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>
-                    Previous
-                </PaginationButton>
-                <span> Page {page} </span>
-                <PaginationButton onClick={() => setPage((prev) => prev + 1)}>
-                    Next
-                </PaginationButton>
-            </PaginationContainer>
-        </Container>
-    );
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
+      <PaginationContainer>
+        <PaginationButton
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+        >
+          Previous
+        </PaginationButton>
+        <span> Page {page} </span>
+        <PaginationButton onClick={() => setPage((prev) => prev + 1)}>
+          Next
+        </PaginationButton>
+      </PaginationContainer>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </Container>
+  );
 };
 
 export default ViewBooks;
